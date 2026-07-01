@@ -1,0 +1,13 @@
+# Built with IntelliJ IDEA
+# Add here: http://www.intellij.com/idea/ignore/
+
+.gradle/
+/build/
+/local.properties
+/.idea/
+*.iml
+*.iws
+*.ipr
+.DS_Store
+.cxx/
+.externalNativeBuild/
