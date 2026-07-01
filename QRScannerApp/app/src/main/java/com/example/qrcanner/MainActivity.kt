@@ -7,8 +7,6 @@ import android.content.Context
 import android.content.pm.PackageManager
 import android.os.Build
 import android.os.Bundle
-import android.os.VibrationEffect
-import android.os.Vibrator
 import android.view.View
 import android.view.animation.Animation
 import android.view.animation.AnimationUtils
@@ -19,10 +17,8 @@ import androidx.camera.core.ImageAnalysis
 import androidx.camera.core.ImageProxy
 import androidx.camera.core.Preview
 import androidx.camera.lifecycle.ProcessCameraProvider
-import androidx.camera.view.PreviewView
 import androidx.core.app.ActivityCompat
 import androidx.core.content.ContextCompat
-import androidx.core.content.ContextCompat.getSystemService
 import com.example.qrcanner.databinding.ActivityMainBinding
 import com.google.mlkit.vision.barcode.BarcodeScanning
 import com.google.mlkit.vision.common.InputImage
@@ -34,7 +30,6 @@ class MainActivity : AppCompatActivity() {
     private lateinit var binding: ActivityMainBinding
     private var isScanning = false
     private var isLaserAnimating = false
-    private var lastScannedCode: String? = null
     
     // CameraX components
     private var cameraProvider: ProcessCameraProvider? = null
@@ -47,9 +42,6 @@ class MainActivity : AppCompatActivity() {
     // Barcode scanner from ML Kit
     private val barcodeScanner = BarcodeScanning.getClient()
     
-    // Vibrator for haptic feedback
-    private var vibrator: Vibrator? = null
-    
     companion object {
         private const val REQUEST_CODE_PERMISSIONS = 10
         private val REQUIRED_PERMISSIONS = arrayOf(Manifest.permission.CAMERA)
@@ -59,9 +51,6 @@ class MainActivity : AppCompatActivity() {
         super.onCreate(savedInstanceState)
         binding = ActivityMainBinding.inflate(layoutInflater)
         setContentView(binding.root)
-        
-        // Initialize vibrator
-        vibrator = getSystemService(Context.VIBRATOR_SERVICE) as? Vibrator
         
         cameraExecutor = Executors.newSingleThreadExecutor()
         
@@ -195,15 +184,13 @@ class MainActivity : AppCompatActivity() {
                     val barcode = barcodes.first()
                     val rawValue = barcode.rawValue
                     
-                    // Only process if we have a new code and scanning is enabled
-                    if (!rawValue.isNullOrEmpty() && isScanning && rawValue != lastScannedCode) {
-                        lastScannedCode = rawValue
+                    if (!rawValue.isNullOrEmpty()) {
                         runOnUiThread {
                             displayResult(rawValue, barcode.formatToString())
-
-                            // Haptic feedback
-                            vibrateOnSuccess()
-
+                            
+                            // Vibrate or play sound (optional)
+                            // You can add haptic feedback here
+                            
                             // Pause scanning briefly
                             pauseScanning()
                         }
@@ -252,7 +239,6 @@ class MainActivity : AppCompatActivity() {
     
     private fun startScanning() {
         isScanning = true
-        lastScannedCode = null // Reset last scanned code
         binding.scanButton.text = getString(R.string.stop_scan)
         binding.resultText.text = getString(R.string.no_result)
         binding.barcodeType.visibility = View.GONE
@@ -301,26 +287,14 @@ class MainActivity : AppCompatActivity() {
         val clipboard = getSystemService(Context.CLIPBOARD_SERVICE) as ClipboardManager
         val clip = ClipData.newPlainText("QR/Barcode Result", text)
         clipboard.setPrimaryClip(clip)
-
+        
         Toast.makeText(this, getString(R.string.copied), Toast.LENGTH_SHORT).show()
     }
     
-    private fun vibrateOnSuccess() {
-        vibrator?.let {
-            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-                it.vibrate(VibrationEffect.createOneShot(200, VibrationEffect.DEFAULT_AMPLITUDE))
-            } else {
-                @Suppress("DEPRECATION")
-                it.vibrate(200)
-            }
-        }
-    }
-
     override fun onDestroy() {
         super.onDestroy()
         cameraExecutor.shutdown()
         barcodeScanner.close()
         stopLaserAnimation()
-        vibrator?.cancel()
     }
 }

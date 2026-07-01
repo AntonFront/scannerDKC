@@ -3,11 +3,11 @@
     <!-- Transparent center -->
     <solid android:color="@android:color/transparent" />
     
-    <!-- Border with primary color -->
+    <!-- Border -->
     <stroke
-        android:width="2dp"
+        android:width="4dp"
         android:color="@color/primary" />
     
     <!-- Rounded corners -->
-    <corners android:radius="12dp" />
+    <corners android:radius="8dp" />
 </shape>
